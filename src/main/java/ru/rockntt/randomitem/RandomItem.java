@@ -20,10 +20,11 @@ public final class RandomItem extends JavaPlugin {
     private List<Player> playerList = new ArrayList<>();
     private BukkitTask itemGiveTask;
     private boolean isSchedulerRunning = false;
+    private int item_give_period = 600;
 
     @Override
     public void onEnable() {
-        Bukkit.getScheduler().runTaskTimer(this, MyFunctions.giveRandomItemToPlayers, 0, 600); // 20 тиков = 1 секунда
+        Bukkit.getScheduler().runTaskTimer(this, MyFunctions.giveRandomItemToPlayers, 0, item_give_period); // 20 тиков = 1 секунда
         getCommand("randomitem").setExecutor(new CommandExecutor() {
             @Override
             public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
@@ -66,44 +67,40 @@ public final class RandomItem extends JavaPlugin {
                     }
                     return true;
                 }
+                if(args.length == 1 && args[0].equalsIgnoreCase("stop")){
+                    if (isSchedulerRunning) {
+                        itemGiveTask.cancel();
+                        isSchedulerRunning = false;
+                        sender.sendMessage("Scheduler stopped");
+                    } else {
+                        sender.sendMessage("Scheduler is not running");
+                    }
+                    return true;
+                }
 
+                if(args.length == 1 && args[0].equalsIgnoreCase("start")){
+                    if (!isSchedulerRunning) {
+                        itemGiveTask = Bukkit.getScheduler().runTaskTimer(RandomItem.this, MyFunctions.giveRandomItemToPlayers, 0, 600);
+                        isSchedulerRunning = true;
+                        sender.sendMessage("Игра начата!");
+                    } else {
+                        sender.sendMessage("Игра остановлена");
+                    }
+                    return true;
+                }
+                if(args.length > 2 && (args[0] + " " + args[1]).equalsIgnoreCase("set time")){
+                    item_give_period = (int)Math.ceil(Double.parseDouble(args[2])) * 20;
+                    sender.sendMessage(String.format("Период выдачи предметов игрокам установлен на %s", item_give_period));
+                }
                 return true;
             }
             public void addPlayer(Player player) {
                 playerList.add(player);
             }
         });
-        getCommand("start").setExecutor(new CommandExecutor() {
-            @Override
-            public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-                if (!isSchedulerRunning) {
-                    itemGiveTask = Bukkit.getScheduler().runTaskTimer(RandomItem.this, MyFunctions.giveRandomItemToPlayers, 0, 600);
-                    isSchedulerRunning = true;
-                    sender.sendMessage("Scheduler started");
-                } else {
-                    sender.sendMessage("Scheduler is already running");
-                }
-                return true;
-            }
-        });
-
-        getCommand("stop").setExecutor(new CommandExecutor() {
-            @Override
-            public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-                if (isSchedulerRunning) {
-                    itemGiveTask.cancel();
-                    isSchedulerRunning = false;
-                    sender.sendMessage("Scheduler stopped");
-                } else {
-                    sender.sendMessage("Scheduler is not running");
-                }
-                return true;
-            }
-        });
     }
 
     @Override
     public void onDisable() {
-        stopSchedulerTask();
     }
 }
