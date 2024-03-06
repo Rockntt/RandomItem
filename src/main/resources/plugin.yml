@@ -1,0 +1,4 @@
+name: RandomItem
+version: '${project.version}'
+main: ru.rockntt.randomitem.RandomItem
+api-version: '1.16'
