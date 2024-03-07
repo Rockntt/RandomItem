@@ -76,7 +76,6 @@ public final class RandomItem extends JavaPlugin {
                 }
                 if(args.length == 1 && args[0].equalsIgnoreCase("stop")){
                     if (isSchedulerRunning) {
-                        itemGiveTask.cancel();
                         isSchedulerRunning = false;
                         sender.sendMessage("Игра остановлена");
                     } else {
