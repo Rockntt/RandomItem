@@ -15,17 +15,13 @@ import java.util.Arrays;
 public final class RandomItem extends JavaPlugin {
 
     private Player[] playerList = new ArrayList<>().toArray(new Player[0]);
-    private BukkitTask itemGiveTask;
-    
+
     private boolean isSchedulerRunning = false;
-    private int item_give_period = 600;
+    private long item_give_period = 600;
 
     @Override
     public void onEnable() {
         Plugin plugin = this;
-        itemGiveTask = Bukkit.getScheduler().runTaskTimer(this, () -> {
-            MyFunctions.giveRandomItemToPlayers(playerList);
-        }, 0L, item_give_period);
 
         getCommand("randomitem").setExecutor(new CommandExecutor() {
             @Override
@@ -41,9 +37,9 @@ public final class RandomItem extends JavaPlugin {
                         Player targetPlayer = getServer().getPlayerExact(args[1]); // Получаем игрока по нику
                         if (targetPlayer != null) {
                             addPlayer(targetPlayer);
-                            sender.sendMessage("Игрок " + targetPlayer.getName() + " добавлен в список участвующих.");
+                            sender.sendMessage("[RandomItem] Игрок " + targetPlayer.getName() + " добавлен в список участвующих.");
                         } else {
-                            sender.sendMessage("Игрок не найден.");
+                            sender.sendMessage("[RandomItem] Игрок не найден.");
                         }
                         return true;
 
@@ -51,61 +47,57 @@ public final class RandomItem extends JavaPlugin {
                 }
                 if(args[0].equalsIgnoreCase("reload")){
                     reloadConfig();
-                    sender.sendMessage("Plugin reloaded");
+                    sender.sendMessage("[RandomItem] Плагин перезагружен");
                     return true;
                 }
                 if(args[0].equalsIgnoreCase("players")){
 
                     if (playerList.length != 0) {
                         s = new String();
-                        s += "Участвующие игроки: ";
+                        s += "[RandomItem] Участвующие игроки: ";
                         for (Player k : playerList) {
                             s += k.getName() + " ";
                         }
                         sender.sendMessage(s);
                         return true;
                     } else {
-                        sender.sendMessage("Пока что никто не участвует в вашей игре. Добавьте игроков: /randomitem addplayer <nick>");
+                        sender.sendMessage("[RandomItem] Пока что никто не участвует в вашей игре. Добавьте игроков: /randomitem addplayer <nick>");
                     }
                     return true;
                 }
                 if(args.length == 1 && args[0].equalsIgnoreCase("stop")){
                     if (isSchedulerRunning) {
                         isSchedulerRunning = false;
-                        sender.sendMessage("Игра остановлена");
+                        sender.sendMessage("[RandomItem] Игра остановлена");
                     } else {
-                        sender.sendMessage("Игра и так не начата");
+                        sender.sendMessage("[RandomItem] Игра и так не начата");
                     }
                     return true;
                 }
 
                 if(args.length == 1 && args[0].equalsIgnoreCase("start")){
                     if (!isSchedulerRunning) {
-                        Runnable task = new Runnable() {
-                            @Override
-                            public void run() {
-                                // Ваш код для выдачи предметов игрокам
-                                MyFunctions.giveRandomItemToPlayers(playerList);
-                            }
-                        };
-
-
-                        itemGiveTask = Bukkit.getScheduler().runTaskTimer(plugin, task, 0, item_give_period);
-
                         isSchedulerRunning = true;
-                        sender.sendMessage("Игра начата!");
+                        Bukkit.getScheduler().runTaskTimer(plugin, (task) -> {
+                            MyFunctions.giveRandomItemToPlayers(playerList);
+                            if(!isSchedulerRunning){
+                                task.cancel();
+                            }
+                        }, 0L, item_give_period);
+                        sender.sendMessage("[RandomItem] Игра начата!");
                     } else {
-                        sender.sendMessage("Игра уже идет!");
+                        sender.sendMessage("[RandomItem] Игра уже идет!");
                     }
                     return true;
                 }
                 if(args.length > 2 && (args[0] + " " + args[1]).equalsIgnoreCase("set time")){
                     item_give_period = (int)Math.ceil(Double.parseDouble(args[2])) * 20;
-                    sender.sendMessage(String.format("Период выдачи предметов игрокам установлен на %s", item_give_period / 20));
+                    sender.sendMessage(String.format("[RandomItem] Период выдачи предметов игрокам установлен на %s сек.", item_give_period / 20));
                 }
                 return true;
             }
             public void addPlayer(Player player) {
+
                 Player[] newArray = Arrays.copyOf(playerList, playerList.length + 1);
                 newArray[newArray.length - 1] = player;
                 playerList = newArray;
