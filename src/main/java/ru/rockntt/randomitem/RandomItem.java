@@ -37,7 +37,6 @@ public final class RandomItem extends JavaPlugin {
                         Player targetPlayer = getServer().getPlayerExact(args[1]); // Получаем игрока по нику
                         if (targetPlayer != null) {
                             addPlayer(targetPlayer, sender);
-                            sender.sendMessage("[RandomItem] Игрок " + targetPlayer.getName() + " добавлен в список участвующих.");
                         } else {
                             sender.sendMessage("[RandomItem] Игрок не найден.");
                         }
@@ -98,7 +97,7 @@ public final class RandomItem extends JavaPlugin {
             }
             public void addPlayer(Player player, CommandSender sender) {
                 for (Player p : playerList) {
-                    if (p.equals(player)) {
+                    if (p.getName() == player.getName()) {
                         sender.sendMessage(String.format("[RandomItem] %s уже участвует в игре", player.getName()));
                         return;
                     }
